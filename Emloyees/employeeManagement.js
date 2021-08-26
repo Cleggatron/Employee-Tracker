@@ -9,6 +9,39 @@ class EmployeeManagement {
     }
 
     employeeOptions(){
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Which action would you like to take?",
+                name: "action",
+                choices: ["Select all employees.", "Select all departments.", "Select all roles."]
+            }
+        ])
+        .then(val => {
+            const {action} = val;
+            switch(action){
+                case "Select all employees." :
+
+                break;
+
+                case "Select all roles." :
+
+                break;
+
+                case "Select all roles." :
+
+                break;
+
+                case "" :
+
+                break;
+
+                default:
+
+                    break;
+            }
+        })
+
     }
     //Handle 
     continueManagement() {
