@@ -34,7 +34,7 @@ class EmployeeManagement {
                 type: "list",
                 message: "Which action would you like to take?",
                 name: "action",
-                choices: ["Select all employees.", "Select all departments.", "Select all roles."]
+                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add a role."]
             }
         ])
         .then(val => {
@@ -52,8 +52,8 @@ class EmployeeManagement {
                     this.selectAllRoles();
                 break;
 
-                case "" :
-
+                case "Add a role." :
+                    this.addRole();
                 break;
 
                 default:
@@ -81,28 +81,96 @@ class EmployeeManagement {
     }
 
     selectAllEmployees() {
-        this.db.query("SELECT * FROM employee", (err, results) => {
+        this.db.query(
+            `SELECT emp.id , 
+            CONCAT(emp.first_name, ' ', emp.last_name) AS EmployeeName, 
+            role.title, 
+            role.salary, 
+            department.name, 
+            CONCAT(man.first_name, ' ', man.last_name) AS ManagerName 
+            FROM 
+            employee emp
+            LEFT JOIN employee man ON emp.manager_id = man.id
+            LEFT JOIN role ON emp.role_id = role.id
+            LEFT JOIN department on role.department_id = department.id
+            `, (err, results) => {
             console.log("\n");
             console.table(results);
+            this.continueManagement()
         })
-        this.continueManagement()
+       
     }
 
     selectAllDepartments() {
         this.db.query("SELECT * FROM department", (err, results) => {
             console.log("\n");
             console.table(results);
+            this.continueManagement()
         })
-        this.continueManagement()
+        
     }
 
     selectAllRoles() {
-        this.db.query("SELECT * FROM role", (err, results) => {
+        this.db.query(`
+        SELECT
+        role.id, role.title, role.salary, department.name
+        FROM role
+        LEFT JOIN department ON department.id = role.department_id
+        `, (err, results) => {
             console.log("\n");
             console.table(results);
+            this.continueManagement();
         })
-        this.continueManagement();
+        
     }
+
+    addRole(){
+        inquirer.prompt(
+            [
+                {
+                    type: "input",
+                    message: "Please enter the new role name:",
+                    name: "roleName"
+                },
+                {
+                    type: "input",
+                    message: "Please enter this role's salary:",
+                    name: "roleSalary"
+                },
+                {
+                    type: "input",
+                    message: "Please enter this role's dept:",
+                    name: "roleDepartment"
+                }
+            ]
+        ).then(answers => {
+            const {roleName, roleSalary, roleDepartment} = answers;
+            console.log(roleName, roleSalary, roleDepartment);
+            //Get our department ID numbe from the typed department.
+            this.db.query(`SELECT id FROM department WHERE name = ?`,roleDepartment ,(err, results) => {
+                if(err){
+                    console.log("The specified department does not exist. Please create this or check any spelling errors.");
+                    this.continueManagement()
+                } else {
+                    //destructure array then object to get the data
+                    const [idObj] = results;
+                    const {id} = idObj;
+                    this.db.query(`INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`, [roleName, roleSalary, id], (err, results) => {
+                        if(err){
+                            console.log(err);
+                            this.continueManagement
+                        }else{
+                            console.log("Role Sucessfully Added!");
+                            this.continueManagement();
+                        }
+                    })
+                }
+
+            })
+        })
+    }
+
+    
 }
 
 module.exports = EmployeeManagement;
