@@ -34,7 +34,7 @@ class EmployeeManagement {
                 type: "list",
                 message: "Which action would you like to take?",
                 name: "action",
-                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add a role.", "Add a department."]
+                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add an employee." ,"Add a role.", "Add a department."]
             }
         ])
         .then(val => {
@@ -59,6 +59,9 @@ class EmployeeManagement {
                 case "Add a department." :
                     this.addDepartment();
                     break;
+                case "Add an employee." :
+                    this.addEmployee();
+                break;
             }
         })
 
@@ -209,7 +212,94 @@ class EmployeeManagement {
         )
     }
 
+    // WHEN I choose to add an employee
+    // THEN I am prompted to enter the
+    // employee’s first name, last name, role, and manager, and that employee is added to the database
+    
+    addEmployee(){
+        //these will ahve values pushed into them later.
+        const roles = [];
+        const managers = [];
 
+        //get roles for inquirer prompt
+        this.db.query("SELECT title FROM role", (err, results) => {
+            if(err){
+                console.log("An error has occured!");
+                this.continueManagement();
+            }else{
+                //Turn the arrary of objects into an array of strings
+                results.forEach(obj =>{
+                    roles.push(obj.title)
+                    
+                })
+                
+                //query managers for inquirer prompt
+                this.db.query("SELECT id, first_name, last_name FROM employee WHERE manager_id IS NULL", (err2, results2) =>{
+                    if(err2){
+                        console.log("An error has occured!");
+                        this.continueManagement();
+                    }else{
+                        
+                        results2.forEach(obj =>{
+                            managers.push(obj.first_name + ' ' + obj.last_name)
+                        })
+                        
+
+                        inquirer.prompt([
+                            {
+                                type: "input",
+                                message: "Please Enter the first name of the employee.",
+                                name: "firstName"
+                            },
+                            {
+                                type: "input",
+                                message: "Please enter the last name of the new employee.",
+                                name: "lastName"
+                            },
+                            {
+                                type: "list",
+                                message: "Please select the employee's role.",
+                                name: "role",
+                                choices: roles
+                            },
+                            {
+                                type: "list",
+                                message: "Please select the employee's manager.",
+                                name: "manager",
+                                choices: managers
+                            }
+                        ])
+                        .then(answers =>{
+                            
+                            const {firstName, lastName, role, manager} = answers;
+                            this.db.query(`SELECT id FROM role WHERE title = ?`, role , (err , result) =>{
+                                //destructure to get the value inside
+                                const [objID] = result
+                                const roleId = objID.id
+                                const managerName = answers.manager.split(" ");
+
+                               this.db.query("SELECT id FROM employee WHERE first_name = ? AND last_name = ?", managerName, (err2, result2) =>{
+                                   //destructure to get the value inside
+                                   const [objManId] = result2
+                                   const managerId = objManId.id
+
+                                   this.db.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (? , ?, ? ,?);", [firstName, lastName, roleId, managerId], (err, result) =>{
+                                       if(err){
+                                           console.log("An error has occured! Please try again!");
+                                           this.continueManagement();
+                                       }else{
+                                           console.log("Employee added sucessfully!");
+                                           this.continueManagement();
+                                       }
+                                   })
+                               })
+                            })
+                        })
+                    }
+                })
+            }
+        })
+    }
 }
 
 module.exports = EmployeeManagement;
