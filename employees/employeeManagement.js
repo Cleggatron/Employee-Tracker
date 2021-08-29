@@ -1,5 +1,6 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const cTable = require("console.table");
 
 require("dotenv").config();
 
@@ -62,7 +63,7 @@ class EmployeeManagement {
         })
 
     }
-    //Handle 
+    //Handle option to continue working
     continueManagement() {
         inquirer.prompt([
             {
@@ -74,28 +75,31 @@ class EmployeeManagement {
             if(val.continue){
                 this.employeeOptions()
             } else{
-                return;
+                process.exit();
             }
         })
     }
 
     selectAllEmployees() {
         this.db.query("SELECT * FROM employee", (err, results) => {
-            console.log(results);
+            console.log("\n");
+            console.table(results);
         })
         this.continueManagement()
     }
 
     selectAllDepartments() {
         this.db.query("SELECT * FROM department", (err, results) => {
-            console.log(results);
+            console.log("\n");
+            console.table(results);
         })
         this.continueManagement()
     }
 
     selectAllRoles() {
         this.db.query("SELECT * FROM role", (err, results) => {
-            console.log(results);
+            console.log("\n");
+            console.table(results);
         })
         this.continueManagement();
     }
