@@ -9,6 +9,7 @@ class EmployeeManagement {
     constructor () {
         this.db = "";
     }
+    //Establishes our DB connection
     startConnection(){
         this.db = mysql.createConnection(
             {
@@ -27,7 +28,7 @@ class EmployeeManagement {
        
         this.employeeOptions();
     }
-
+    //Our action menu
     employeeOptions(){
         inquirer.prompt([
             {
@@ -229,7 +230,6 @@ class EmployeeManagement {
                 //Turn the arrary of objects into an array of strings
                 results.forEach(obj =>{
                     roles.push(obj.title)
-                    
                 })
                 
                 //query managers for inquirer prompt
@@ -243,7 +243,6 @@ class EmployeeManagement {
                             managers.push(obj.first_name + ' ' + obj.last_name)
                         })
                         
-
                         inquirer.prompt([
                             {
                                 type: "input",
@@ -300,9 +299,6 @@ class EmployeeManagement {
         })
     }
 
-    // WHEN I choose to update an employee role
-    // THEN I am prompted to select an employee to update
-    // and their new role and this information is updated in the database 
     updateEmployeeRole() {
         //get our employee names for inquirer
         this.db.query("SELECT CONCAT(first_name, ' ', last_name) AS FullName FROM employee", (err, names) =>{
@@ -332,10 +328,11 @@ class EmployeeManagement {
                 ]).then(answers => {
                     const {employee, newRole} = answers;
                     const [firstName, lastName] = employee.split(" ");
+                    //gets our job id
                     this.db.query("SELECT id FROM role WHERE title = ?", newRole, (err, response) => {
                         const [objId] = response;
                         const {id} = objId;
-
+                        //performs the update
                         this.db.query("Update employee SET role_id = ? WHERE first_name = ? AND last_name = ?", [id, firstName, lastName], (err, response) =>{
                             if(err){
                                 console.log("An error has occured! The employee has not be updated!");
@@ -346,8 +343,6 @@ class EmployeeManagement {
                             }
                         })
                     })
-                    
-
                 })
             })
         })
