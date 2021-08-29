@@ -40,15 +40,15 @@ class EmployeeManagement {
             const {action} = val;
             switch(action){
                 case "Select all employees." :
+                    this.selectAllEmployees();
+                break;
 
+                case "Select all departments." :
+                    this.selectAllDepartments();
                 break;
 
                 case "Select all roles." :
-
-                break;
-
-                case "Select all roles." :
-
+                    this.selectAllRoles();
                 break;
 
                 case "" :
@@ -77,6 +77,27 @@ class EmployeeManagement {
                 return;
             }
         })
+    }
+
+    selectAllEmployees() {
+        this.db.query("SELECT * FROM employee", (err, results) => {
+            console.log(results);
+        })
+        this.continueManagement()
+    }
+
+    selectAllDepartments() {
+        this.db.query("SELECT * FROM department", (err, results) => {
+            console.log(results);
+        })
+        this.continueManagement()
+    }
+
+    selectAllRoles() {
+        this.db.query("SELECT * FROM role", (err, results) => {
+            console.log(results);
+        })
+        this.continueManagement();
     }
 }
 
