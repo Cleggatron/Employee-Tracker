@@ -1,4 +1,4 @@
-INSERt INTO department(name) VALUES 
+INSERT INTO department(name) VALUES 
     ("Sales"),
     ("Marketing"),
     ("IT");
