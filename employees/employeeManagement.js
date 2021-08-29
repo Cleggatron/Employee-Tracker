@@ -34,7 +34,7 @@ class EmployeeManagement {
                 type: "list",
                 message: "Which action would you like to take?",
                 name: "action",
-                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add a role."]
+                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add a role.", "Add a department."]
             }
         ])
         .then(val => {
@@ -42,22 +42,22 @@ class EmployeeManagement {
             switch(action){
                 case "Select all employees." :
                     this.selectAllEmployees();
-                break;
+                    break;
 
                 case "Select all departments." :
                     this.selectAllDepartments();
-                break;
+                    break;
 
                 case "Select all roles." :
                     this.selectAllRoles();
-                break;
+                    break;
 
                 case "Add a role." :
                     this.addRole();
-                break;
+                    break;
 
-                default:
-
+                case "Add a department." :
+                    this.addDepartment();
                     break;
             }
         })
@@ -124,53 +124,92 @@ class EmployeeManagement {
         
     }
 
-    addRole(){
+    addDepartment() {
         inquirer.prompt(
             [
                 {
                     type: "input",
-                    message: "Please enter the new role name:",
-                    name: "roleName"
-                },
-                {
-                    type: "input",
-                    message: "Please enter this role's salary:",
-                    name: "roleSalary"
-                },
-                {
-                    type: "input",
-                    message: "Please enter this role's dept:",
-                    name: "roleDepartment"
+                    message: "Please enter the new department name:",
+                    name: "deptName"
                 }
-            ]
-        ).then(answers => {
-            const {roleName, roleSalary, roleDepartment} = answers;
-            console.log(roleName, roleSalary, roleDepartment);
-            //Get our department ID numbe from the typed department.
-            this.db.query(`SELECT id FROM department WHERE name = ?`,roleDepartment ,(err, results) => {
-                if(err){
-                    console.log("The specified department does not exist. Please create this or check any spelling errors.");
-                    this.continueManagement()
-                } else {
-                    //destructure array then object to get the data
-                    const [idObj] = results;
-                    const {id} = idObj;
-                    this.db.query(`INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`, [roleName, roleSalary, id], (err, results) => {
-                        if(err){
-                            console.log(err);
-                            this.continueManagement
-                        }else{
-                            console.log("Role Sucessfully Added!");
-                            this.continueManagement();
-                        }
-                    })
-                }
-
+            ]).then(answer =>{
+                const {deptName} = answer;
+                this.db.query(`INSERt INTO department(name) VALUES (?)`, deptName, (err, result) =>{
+                    if(err){
+                        console.log("An error has occured. Please try again!");
+                        this.continueManagement()
+                    }else{
+                        console.log("Department has been sucessfully added!");
+                        this.continueManagement();
+                    }
+                })
             })
-        })
     }
 
-    
+    addRole(){
+        //Get our departments for teh inquirer prompt
+        this.db.query(`SELECT name FROM department`, (err, result) => {
+            if(err){
+                console.log("An error has occured.")
+                this.continueManagement();
+            }else{
+                //Turn the arrary of objects into an array of strings
+                const departments = []
+                result.forEach(obj =>{
+                    departments.push(obj.name)
+                })
+                //Start asking for role details
+                inquirer.prompt(
+                    [
+                        {
+                            type: "input",
+                            message: "Please enter the new role name:",
+                            name: "roleName"
+                        },
+                        {
+                            type: "input",
+                            message: "Please enter this role's salary:",
+                            name: "roleSalary"
+                        },
+                        {
+                            type: "list",
+                            message: "Please enter this role's dept:",
+                            name: "roleDepartment", 
+                            choices: departments
+                        }
+                    ]
+                ).then(answers => {
+                    const {roleName, roleSalary, roleDepartment} = answers;
+                    console.log(roleName, roleSalary, roleDepartment);
+                    //Get our department ID numbe from the typed department.
+                    this.db.query(`SELECT id FROM department WHERE name = ?`,roleDepartment ,(err, results) => {
+                        if(err){
+                            console.log("The specified department does not exist. Please create this or check any spelling errors.");
+                            this.continueManagement()
+                        } else {
+                            //destructure array then object to get the data
+                            const [idObj] = results;
+                            const {id} = idObj;
+                            this.db.query(`INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`, [roleName, roleSalary, id], (err, results) => {
+                                if(err){
+                                    console.log(err);
+                                    this.continueManagement
+                                }else{
+                                    console.log("Role Sucessfully Added!");
+                                    this.continueManagement();
+                                }
+                            })
+                        }
+        
+                    })
+                })
+        
+                }
+            }   
+        )
+    }
+
+
 }
 
 module.exports = EmployeeManagement;
