@@ -34,7 +34,7 @@ class EmployeeManagement {
                 type: "list",
                 message: "Which action would you like to take?",
                 name: "action",
-                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add an employee." ,"Add a role.", "Add a department."]
+                choices: ["Select all employees.", "Select all departments.", "Select all roles.", "Add an employee." ,"Add a role.", "Add a department.", "Update an employee's role."]
             }
         ])
         .then(val => {
@@ -61,6 +61,9 @@ class EmployeeManagement {
                     break;
                 case "Add an employee." :
                     this.addEmployee();
+                break;
+                case "Update an employee's role.":
+                    this.updateEmployeeRole();
                 break;
             }
         })
@@ -212,10 +215,6 @@ class EmployeeManagement {
         )
     }
 
-    // WHEN I choose to add an employee
-    // THEN I am prompted to enter the
-    // employee’s first name, last name, role, and manager, and that employee is added to the database
-    
     addEmployee(){
         //these will ahve values pushed into them later.
         const roles = [];
@@ -298,6 +297,59 @@ class EmployeeManagement {
                     }
                 })
             }
+        })
+    }
+
+    // WHEN I choose to update an employee role
+    // THEN I am prompted to select an employee to update
+    // and their new role and this information is updated in the database 
+    updateEmployeeRole() {
+        //get our employee names for inquirer
+        this.db.query("SELECT CONCAT(first_name, ' ', last_name) AS FullName FROM employee", (err, names) =>{
+            const empNames = []
+            names.forEach(row => {
+                empNames.push(row.FullName);
+            })
+            //get our roles for inquirer
+            this.db.query("SELECT title FROM role", (err, roles) =>{
+                const empRoles = [];
+                roles.forEach(row => {
+                    empRoles.push(row.title);
+                })
+                inquirer.prompt([
+                    {
+                        type: "list",
+                        message: "Please select the employee whose role is changing.",
+                        name: "employee",
+                        choices: empNames
+                    },
+                    {
+                        type: "list",
+                        message: "Please select their new role.",
+                        name: "newRole",
+                        choices: empRoles
+                    }
+                ]).then(answers => {
+                    const {employee, newRole} = answers;
+                    const [firstName, lastName] = employee.split(" ");
+                    this.db.query("SELECT id FROM role WHERE title = ?", newRole, (err, response) => {
+                        const [objId] = response;
+                        const {id} = objId;
+
+                        this.db.query("Update employee SET role_id = ? WHERE first_name = ? AND last_name = ?", [id, firstName, lastName], (err, response) =>{
+                            if(err){
+                                console.log("An error has occured! The employee has not be updated!");
+                                this.continueManagement();
+                            }else{
+                                console.log("The employee has been sucessfully updated!")
+                                this.continueManagement();
+                            }
+                        })
+                    })
+                    
+
+                })
+            })
         })
     }
 }
